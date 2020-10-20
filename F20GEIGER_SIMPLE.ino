@@ -1,3 +1,16 @@
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include "Adafruit_BME680.h"
+
+#define BME_SCK 13
+#define BME_MISO 12
+#define BME_MOSI 11
+#define BME_CS 10
+
+#define SEALEVELPRESSURE_HPA (1013.25)
+
+Adafruit_BME680 bme; // I2C
+
 // INITIALIZE HARDWARE
 int signPin_1 = 2;
 int noisePin_1 = 3;
@@ -49,7 +62,19 @@ void setup() {
   prevTime = millis();
 
   // INITIALIZE SERIAL OUTOUT
-  Serial.println("[time, ms] [GC1] [GC2]");
+  Serial.println("[time, ms] [GC CPM_1] [GC CPM_2] [*C] [hPa] [%] [KOhms] [m]");
+
+  // INITIALIZE BME
+  if (!bme.begin()) {
+    Serial.println("Could not find a valid BME680 sensor, check wiring!");
+  }
+
+  // Set up oversampling and filter initialization
+  bme.setTemperatureOversampling(BME680_OS_8X);
+  bme.setHumidityOversampling(BME680_OS_2X);
+  bme.setPressureOversampling(BME680_OS_4X);
+  bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
+  bme.setGasHeater(320, 150); // 320*C for 150 ms
 }
 
 void loop() {
@@ -127,11 +152,43 @@ void loop() {
     else {
       cpm_2 = -1;
     }
+
+    // PRINT DATA TO SERIAL MONITOR
     Serial.print(total_time);
     Serial.print(" ");
     Serial.print(cpm_1);
     Serial.print(" ");
-    Serial.println(cpm_2);
+    Serial.print(cpm_2);
+    // BME DATA
+    if (! bme.performReading()) {
+      Serial.println("-1 -1 -1 -1 -1");
+    }
+    else {
+      //Serial.print("Temperature = ");
+      Serial.print(bme.temperature);
+      //Serial.println(" *C");
+      Serial.print(" ");
+    
+      //Serial.print("Pressure = ");
+      Serial.print(bme.pressure / 100.0);
+      //Serial.println(" hPa");
+      Serial.print(" ");
+    
+      //Serial.print("Humidity = ");
+      Serial.print(bme.humidity);
+      //Serial.println(" %");
+      Serial.print(" ");
+    
+      //Serial.print("Gas = ");
+      Serial.print(bme.gas_resistance / 1000.0);
+      //Serial.println(" KOhms");
+      Serial.print(" ");
+    
+      //Serial.print("Approx. Altitude = ");
+      Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));
+      //Serial.println(" m");
+      Serial.println("");
+    }
 
     // RESET VARIABLES
     cpm_1 = 0;
