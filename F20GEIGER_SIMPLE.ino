@@ -89,7 +89,6 @@ void loop() {
   { //Deactivate Radiation Pulse counting for a while
     sON_1 = 1;
     signCount_1++;
-    Serial.println("Yes!");
   } else if (sign_1 == 1 && sON_1 == 1) {
     sON_1 = 0;
   }
@@ -126,7 +125,7 @@ void loop() {
   }
 
   //Output readings to serial port, after 10000 loops
-  if (loop_index == 100000) //About 100 * 160-170 msec in Arduino Nano(ATmega328)
+  if (loop_index == 1000) //About 100 * 160-170 msec in Arduino Nano(ATmega328)
   {
     //Get current time
     currTime = millis();
@@ -159,6 +158,8 @@ void loop() {
     Serial.print(cpm_1);
     Serial.print(" ");
     Serial.print(cpm_2);
+    Serial.print(" ");
+    
     // BME DATA
     if (! bme.performReading()) {
       Serial.println("-1 -1 -1 -1 -1");
@@ -188,6 +189,7 @@ void loop() {
       Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));
       //Serial.println(" m");
       Serial.println("");
+      
     }
 
     // RESET VARIABLES
